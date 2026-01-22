@@ -1,0 +1,26 @@
+{
+  "name": "@agentic-router/provider-wrappers",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "concurrently \"tsx watch src/gemini-provider.ts\" \"tsx watch src/claude-provider.ts\"",
+    "start": "concurrently \"node dist/gemini-provider.js\" \"node dist/claude-provider.js\""
+  },
+  "dependencies": {
+    "@agentic-router/shared": "*",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.0",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "concurrently": "^8.2.2"
+  }
+}

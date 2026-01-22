@@ -1,0 +1,21 @@
+{
+  "name": "agentic-llm-router",
+  "version": "1.0.0",
+  "description": "Autonomous LLM Procurement & Payment Router with USDC on Arc",
+  "private": true,
+  "workspaces": [
+    "router-backend",
+    "provider-wrappers",
+    "frontend",
+    "shared"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --workspace=router-backend && npm install --workspace=provider-wrappers && npm install --workspace=frontend && npm install --workspace=shared",
+    "build:all": "npm run build --workspace=shared && npm run build --workspace=router-backend && npm run build --workspace=provider-wrappers && npm run build --workspace=frontend",
+    "dev": "concurrently \"npm run dev --workspace=router-backend\" \"npm run dev --workspace=provider-wrappers\" \"npm run dev --workspace=frontend\"",
+    "test": "npm test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

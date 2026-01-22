@@ -1,0 +1,36 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
+export const config = {
+  // Arc Network
+  arcRpcUrl: process.env.ARC_RPC_URL || 'https://rpc.arc.xyz',
+  arcUsdcAddress: process.env.ARC_USDC_ADDRESS || '0x1234567890123456789012345678901234567890',
+  arcChainId: parseInt(process.env.ARC_CHAIN_ID || '1234'),
+  
+  // Treasury
+  treasuryPrivateKey: process.env.TREASURY_PRIVATE_KEY || '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  
+  // Provider Configuration
+  providers: {
+    gemini: {
+      address: process.env.PROVIDER_GEMINI_ADDRESS || '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb5',
+      url: process.env.PROVIDER_GEMINI_URL || 'http://localhost:4001'
+    },
+    claude: {
+      address: process.env.PROVIDER_CLAUDE_ADDRESS || '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
+      url: process.env.PROVIDER_CLAUDE_URL || 'http://localhost:4002'
+    }
+  },
+  
+  // Spending Limits
+  dailySpendCapUsdc: parseFloat(process.env.DAILY_SPEND_CAP_USDC || '1.0'),
+  perRequestCapUsdc: parseFloat(process.env.PER_REQUEST_CAP_USDC || '0.02'),
+  
+  // System
+  port: parseInt(process.env.PORT || '3000'),
+  demoMode: process.env.DEMO_MODE === 'true',
+  emergencyStop: process.env.EMERGENCY_STOP === 'true',
+  
+  // Allowlist
+  providerAllowlist: process.env.PROVIDER_ALLOWLIST?.split(',') || []
+};
