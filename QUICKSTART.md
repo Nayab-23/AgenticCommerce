@@ -12,7 +12,7 @@ npm install
 cd shared && npm install && npm run build && cd ..
 cd router-backend && npm install && cd ..
 cd provider-wrappers && npm install && cd ..
-cd frontend && npm install && cd ..
+cd web && npm install && cd ..
 ```
 
 ### Step 2: Start Services
@@ -37,7 +37,7 @@ Wait for:
 
 **Terminal 3 - Frontend:**
 ```bash
-cd frontend
+cd web
 npm run dev
 ```
 Wait for: `Local: http://localhost:5173/`

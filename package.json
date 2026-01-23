@@ -6,13 +6,13 @@
   "workspaces": [
     "router-backend",
     "provider-wrappers",
-    "frontend",
+    "web",
     "shared"
   ],
   "scripts": {
-    "install:all": "npm install && npm install --workspace=router-backend && npm install --workspace=provider-wrappers && npm install --workspace=frontend && npm install --workspace=shared",
-    "build:all": "npm run build --workspace=shared && npm run build --workspace=router-backend && npm run build --workspace=provider-wrappers && npm run build --workspace=frontend",
-    "dev": "concurrently \"npm run dev --workspace=router-backend\" \"npm run dev --workspace=provider-wrappers\" \"npm run dev --workspace=frontend\"",
+    "install:all": "npm install && npm install --workspace=router-backend && npm install --workspace=provider-wrappers && npm install --workspace=web && npm install --workspace=shared",
+    "build:all": "npm run build --workspace=shared && npm run build --workspace=router-backend && npm run build --workspace=provider-wrappers && npm run build --workspace=web",
+    "dev": "concurrently \"npm run dev --workspace=router-backend\" \"npm run dev --workspace=provider-wrappers\" \"npm run dev --workspace=web\"",
     "test": "npm test --workspaces --if-present"
   },
   "devDependencies": {
