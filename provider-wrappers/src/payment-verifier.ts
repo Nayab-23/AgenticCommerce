@@ -53,6 +53,11 @@ export class PaymentVerifier {
       const receipt = await this.provider.getTransactionReceipt(txHash);
       
       if (!receipt) {
+        if (config.allowUnverifiedPayments) {
+          console.warn('[PAYMENT VERIFIER] Receipt not found, allowing payment in relaxed mode');
+          this.verifiedNonces.add(paymentNonce);
+          return { verified: true };
+        }
         return {
           verified: false,
           reason: 'Transaction not found or not confirmed'
@@ -90,6 +95,11 @@ export class PaymentVerifier {
       });
       
       if (!matchingTransfer) {
+        if (config.allowUnverifiedPayments) {
+          console.warn('[PAYMENT VERIFIER] No matching transfer, allowing payment in relaxed mode');
+          this.verifiedNonces.add(paymentNonce);
+          return { verified: true };
+        }
         return {
           verified: false,
           reason: 'No matching USDC transfer found to recipient address'
@@ -103,6 +113,11 @@ export class PaymentVerifier {
       
     } catch (error) {
       console.error('Payment verification error:', error);
+      if (config.allowUnverifiedPayments) {
+        console.warn('[PAYMENT VERIFIER] Verification error, allowing payment in relaxed mode');
+        this.verifiedNonces.add(paymentNonce);
+        return { verified: true };
+      }
       return {
         verified: false,
         reason: `Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`

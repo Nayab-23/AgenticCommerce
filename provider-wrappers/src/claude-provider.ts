@@ -27,8 +27,8 @@ app.get('/quote', (req: Request, res: Response) => {
   const quote: ProviderQuote = {
     provider_id: PROVIDER_ID,
     model_name: MODEL_NAME,
-    price_per_1k_tokens: 0.00025, // Higher quality, higher price
-    base_fee: 0.0003,
+    price_per_1k_tokens: 0.002, // Adjusted to meet Circle min transfer amounts
+    base_fee: 0.03,
     est_latency_ms: 1200,
     quality_tier: 'premium',
     expires_at: Date.now() + 60000, // Valid for 60 seconds

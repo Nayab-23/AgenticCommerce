@@ -27,8 +27,8 @@ app.get('/quote', (req: Request, res: Response) => {
   const quote: ProviderQuote = {
     provider_id: PROVIDER_ID,
     model_name: MODEL_NAME,
-    price_per_1k_tokens: 0.00001, // Very cheap for Gemini Flash
-    base_fee: 0.0001,
+    price_per_1k_tokens: 0.001, // Adjusted to meet Circle min transfer amounts
+    base_fee: 0.01,
     est_latency_ms: 800,
     quality_tier: 'cheap',
     expires_at: Date.now() + 60000, // Valid for 60 seconds

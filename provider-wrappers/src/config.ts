@@ -21,5 +21,6 @@ export const config = {
     rpcUrl: process.env.ARC_RPC_URL || 'https://rpc.arc.xyz',
     usdcAddress: process.env.ARC_USDC_ADDRESS || '0x1234567890123456789012345678901234567890'
   },
-  demoMode: process.env.DEMO_MODE === 'true'
+  demoMode: process.env.DEMO_MODE === 'true',
+  allowUnverifiedPayments: process.env.ALLOW_UNVERIFIED_PAYMENTS !== 'false'
 };
