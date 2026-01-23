@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from './components/layout/dashboard-layout';
 import { KpiCard } from './components/dashboard/kpi-card';
 import { TaskBadge } from './components/dashboard/task-badge';
@@ -6,9 +6,9 @@ import { StatusBadge } from './components/dashboard/status-badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/ui/card';
 import { Button } from './components/ui/button';
 import { RouteRequest, RouteResponse } from './types';
-import { api } from './api';
+import { api, DashboardStats } from './api';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, DollarSign, Zap, Clock, Send, Copy, ExternalLink, ArrowUpDown } from 'lucide-react';
+import { TrendingUp, DollarSign, Zap, Clock, Send, Copy, ExternalLink, ArrowUpDown, ToggleLeft, ToggleRight } from 'lucide-react';
 
 // Mock data for charts
 const costData = [
@@ -96,6 +96,44 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [budget, setBudget] = useState('0.05');
   const [taskType, setTaskType] = useState('general');
+  const [showDemoData, setShowDemoData] = useState(true);
+  const [liveStats, setLiveStats] = useState<DashboardStats | null>(null);
+
+  // Fetch live stats periodically
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const stats = await api.getDashboardStats();
+        setLiveStats(stats);
+      } catch (err) {
+        console.log('Could not fetch live stats');
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 5000); // Refresh every 5s
+    return () => clearInterval(interval);
+  }, []);
+
+  // Use live or demo data based on toggle
+  const displayCostData = showDemoData ? costData : (liveStats?.costOverTime || []);
+  const displayLatencyData = showDemoData ? latencyData : (liveStats?.latencyOverTime?.map(d => ({ time: d.time, p50: d.latency, p95: d.latency * 1.5 })) || []);
+  const displayRequests = showDemoData ? mockRequests : (liveStats?.recentRequests?.map(r => ({
+    id: r.id,
+    timestamp: new Date(r.timestamp).toLocaleString(),
+    taskType: r.taskType as any,
+    riskLevel: 'low' as const,
+    provider: r.provider,
+    quoteCost: `$${r.costUsdc.toFixed(6)}`,
+    paidCost: `$${r.costUsdc.toFixed(6)}`,
+    latency: r.latencyMs,
+    verification: r.verified,
+    escalated: false,
+    txHash: r.txHash
+  })) || []);
+  const displayTotals = showDemoData
+    ? { totalRequests: 1237, totalSpend: 42.36, avgLatency: 127, successRate: 98.2 }
+    : (liveStats?.totals || { totalRequests: 0, totalSpend: 0, avgLatency: 0, successRate: 100 });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,34 +173,50 @@ function App() {
             <h1 className="text-3xl font-bold text-foreground">Agentic LLM Router</h1>
             <p className="text-muted-foreground">Monitor and manage your LLM procurement and payments</p>
           </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Demo Data</span>
+            <button
+              onClick={() => setShowDemoData(!showDemoData)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md border hover:bg-muted transition-colors"
+            >
+              {showDemoData ? (
+                <ToggleLeft className="h-5 w-5 text-muted-foreground" />
+              ) : (
+                <ToggleRight className="h-5 w-5 text-green-500" />
+              )}
+              <span className="text-sm font-medium">
+                {showDemoData ? 'Demo' : 'Live'}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* KPIs */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <KpiCard
             title="Total Requests"
-            value="1,237"
+            value={displayTotals.totalRequests.toLocaleString()}
             unit="requests"
-            tooltip="Total number of LLM requests processed today"
+            tooltip="Total number of LLM requests processed"
             trend={{ value: 12.5, isPositive: true }}
           />
           <KpiCard
             title="Total Spend"
-            value="$42.36"
+            value={`$${displayTotals.totalSpend.toFixed(2)}`}
             unit="USDC"
             tooltip="Total amount spent on LLM requests in USDC"
             trend={{ value: 8.2, isPositive: false }}
           />
           <KpiCard
             title="Avg Latency"
-            value="127"
+            value={Math.round(displayTotals.avgLatency).toString()}
             unit="ms"
             tooltip="Average response time across all providers"
             trend={{ value: 3.1, isPositive: true }}
           />
           <KpiCard
             title="Success Rate"
-            value="98.2%"
+            value={`${displayTotals.successRate.toFixed(1)}%`}
             tooltip="Percentage of successful verifications"
             trend={{ value: 2, isPositive: true }}
           />
@@ -187,7 +241,7 @@ function App() {
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Enter your prompt here..."
-                    className="w-full min-h-[100px] p-3 border border-input rounded-md resize-vertical"
+                    className="w-full min-h-[100px] p-3 border border-input rounded-md resize-vertical text-black bg-white"
                     disabled={isLoading}
                   />
                 </div>
@@ -203,7 +257,7 @@ function App() {
                       step="0.001"
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
-                      className="w-full p-2 border border-input rounded-md"
+                      className="w-full p-2 border border-input rounded-md text-black bg-white"
                       disabled={isLoading}
                     />
                   </div>
@@ -216,7 +270,7 @@ function App() {
                       id="taskType"
                       value={taskType}
                       onChange={(e) => setTaskType(e.target.value)}
-                      className="w-full p-2 border border-input rounded-md"
+                      className="w-full p-2 border border-input rounded-md text-black bg-white"
                       disabled={isLoading}
                     >
                       <option value="general">General</option>
@@ -266,26 +320,44 @@ function App() {
                 <div className="space-y-4">
                   <div className="p-4 border bg-green-50 text-green-700 rounded-md">
                     <p className="font-medium">✓ Request Successful</p>
-                    <p className="text-sm mt-1">Provider: {result.selectedProvider}</p>
-                    <p className="text-sm">Cost: ${result.actualCostUSDC}</p>
-                    {result.txHash && (
+                    <p className="text-sm mt-1">Provider: {result.selected_provider?.provider_id}</p>
+                    <p className="text-sm">Cost: ${result.total_cost_usdc?.toFixed(6)} USDC</p>
+                    <p className="text-sm">Latency: {result.latency_ms}ms</p>
+                    {result.payment?.tx_hash && (
                       <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs font-mono break-all">Tx: {result.txHash}</p>
+                        <p className="text-xs font-mono break-all">Tx: {result.payment.tx_hash}</p>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(result.txHash)}
+                          onClick={() => copyToClipboard(result.payment.tx_hash)}
                         >
                           <Copy className="h-3 w-3" />
                         </Button>
+                        <a
+                          href={`https://testnet.arcscan.app/tx/${result.payment.tx_hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
                       </div>
                     )}
                   </div>
-                  
-                  <div className="p-4 border rounded-md">
-                    <p className="font-medium mb-2">Response:</p>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{result.response}</p>
+
+                  <div className="p-4 border rounded-md bg-white">
+                    <p className="font-medium mb-2 text-black">Response:</p>
+                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.completion}</p>
                   </div>
+
+                  {result.verification && (
+                    <div className={`p-3 border rounded-md ${result.verification.passed ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'}`}>
+                      <p className="text-sm font-medium">
+                        Verification: {result.verification.passed ? '✓ Passed' : '⚠ Issues'}
+                      </p>
+                      <p className="text-xs">{result.verification.reason}</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground py-8">
@@ -305,7 +377,7 @@ function App() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={costData}>
+                <LineChart data={displayCostData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
                   <YAxis />
@@ -323,7 +395,7 @@ function App() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={latencyData}>
+                <LineChart data={displayLatencyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="time" />
                   <YAxis />
@@ -359,7 +431,7 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockRequests.map((request) => (
+                  {displayRequests.map((request) => (
                     <tr key={request.id} className="border-b hover:bg-muted/50">
                       <td className="p-2 text-sm">{request.timestamp}</td>
                       <td className="p-2 text-sm font-mono">{request.id.slice(0, 12)}...</td>

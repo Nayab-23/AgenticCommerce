@@ -14,6 +14,7 @@ import { ProviderClient } from './provider-client';
 import { ProviderSelector } from './selector';
 import { VerificationService } from './verifier';
 import { SpendTracker } from './spend-tracker';
+import { statsTracker } from './stats';
 
 const app = express();
 app.use(cors());
@@ -190,6 +191,19 @@ app.post('/api/route', async (req: Request, res: Response) => {
       escalated,
       verification_passed: verification.passed
     });
+
+    // Step 11: Record stats for dashboard
+    statsTracker.addRequest({
+      id: requestId,
+      timestamp: new Date(),
+      prompt: routeRequest.prompt.substring(0, 100),
+      taskType: classification.task_type,
+      provider: selection.provider_id,
+      costUsdc: totalCost,
+      latencyMs: Date.now() - startTime,
+      txHash: payment.tx_hash,
+      verified: verification.passed
+    });
     
     // Build response
     const response: RouteResponse = {
@@ -222,11 +236,25 @@ app.post('/api/route', async (req: Request, res: Response) => {
 });
 
 /**
- * Get usage statistics
+ * Get usage statistics (legacy)
  */
 app.get('/api/stats', (req: Request, res: Response) => {
   const stats = spendTracker.getStats();
   res.json(stats);
+});
+
+/**
+ * Get dashboard stats (for charts)
+ */
+app.get('/api/dashboard/stats', (req: Request, res: Response) => {
+  res.json({
+    totals: statsTracker.getTotalStats(),
+    costOverTime: statsTracker.getCostOverTime(),
+    latencyOverTime: statsTracker.getLatencyOverTime(),
+    providerBreakdown: statsTracker.getProviderBreakdown(),
+    taskTypeBreakdown: statsTracker.getTaskTypeBreakdown(),
+    recentRequests: statsTracker.getRecentRequests(10)
+  });
 });
 
 /**
