@@ -63,7 +63,7 @@ export class VerificationService {
    */
   private verifyCode(completion: string): VerificationResult {
     const hasCodeBlock = /```|function|class|def |import |const |let |var /.test(completion);
-    const minLength = completion.length > 50;
+    const minLength = completion.length > 30;
     
     if (!hasCodeBlock || !minLength) {
       return {

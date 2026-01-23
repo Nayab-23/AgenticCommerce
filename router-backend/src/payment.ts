@@ -14,18 +14,22 @@ const ERC20_ABI = [
  * PaymentService handles USDC transfers on Arc network
  */
 export class PaymentService {
-  private provider: ethers.JsonRpcProvider;
+  private provider?: ethers.JsonRpcProvider;
   private wallet: ethers.Wallet;
-  private usdcContract: ethers.Contract;
+  private usdcContract?: ethers.Contract;
   
   constructor() {
-    this.provider = new ethers.JsonRpcProvider(config.arcRpcUrl);
-    this.wallet = new ethers.Wallet(config.treasuryPrivateKey, this.provider);
-    this.usdcContract = new ethers.Contract(
-      config.arcUsdcAddress,
-      ERC20_ABI,
-      this.wallet
-    );
+    if (!config.demoMode) {
+      this.provider = new ethers.JsonRpcProvider(config.arcRpcUrl);
+      this.wallet = new ethers.Wallet(config.treasuryPrivateKey, this.provider);
+      this.usdcContract = new ethers.Contract(
+        config.arcUsdcAddress,
+        ERC20_ABI,
+        this.wallet
+      );
+    } else {
+      this.wallet = new ethers.Wallet(config.treasuryPrivateKey);
+    }
   }
   
   /**
@@ -41,33 +45,31 @@ export class PaymentService {
     
     // Generate unique nonce
     const paymentNonce = uuidv4();
+
+    if (config.demoMode) {
+      const mockTxHash = '0x' + Array(64).fill(0).map(() => 
+        Math.floor(Math.random() * 16).toString(16)
+      ).join('');
+      
+      console.log(`[DEMO MODE] Simulated payment tx: ${mockTxHash}`);
+      
+      return {
+        amount_usdc: amountUsdc,
+        recipient_address: recipientAddress,
+        tx_hash: mockTxHash,
+        block_number: Math.floor(Math.random() * 1000000),
+        payment_nonce: paymentNonce
+      };
+    }
     
     // Convert USDC to smallest unit (6 decimals)
-    const decimals = await this.usdcContract.decimals();
+    const decimals = await this.usdcContract!.decimals();
     const amount = ethers.parseUnits(amountUsdc.toFixed(6), decimals);
     
     console.log(`Sending ${amountUsdc} USDC to ${recipientAddress}...`);
     
     try {
-      // In demo mode, simulate the transaction
-      if (config.demoMode) {
-        const mockTxHash = '0x' + Array(64).fill(0).map(() => 
-          Math.floor(Math.random() * 16).toString(16)
-        ).join('');
-        
-        console.log(`[DEMO MODE] Simulated payment tx: ${mockTxHash}`);
-        
-        return {
-          amount_usdc: amountUsdc,
-          recipient_address: recipientAddress,
-          tx_hash: mockTxHash,
-          block_number: Math.floor(Math.random() * 1000000),
-          payment_nonce: paymentNonce
-        };
-      }
-      
-      // Real transaction
-      const tx = await this.usdcContract.transfer(recipientAddress, amount);
+      const tx = await this.usdcContract!.transfer(recipientAddress, amount);
       console.log(`Transaction submitted: ${tx.hash}`);
       
       const receipt = await tx.wait(1); // Wait for 1 confirmation
@@ -90,6 +92,10 @@ export class PaymentService {
    * Get treasury balance
    */
   async getTreasuryBalance(): Promise<number> {
+    if (config.demoMode || !this.usdcContract) {
+      return 0;
+    }
+
     const balance = await this.usdcContract.balanceOf(this.wallet.address);
     const decimals = await this.usdcContract.decimals();
     return parseFloat(ethers.formatUnits(balance, decimals));

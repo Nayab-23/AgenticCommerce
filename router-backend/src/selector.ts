@@ -86,7 +86,7 @@ export class ProviderSelector {
     // Check cost constraint
     const estimatedCost = this.estimateCost(quote, classification.estimated_tokens);
     const maxCost = policy?.max_cost_usdc || config.perRequestCapUsdc;
-    if (estimatedCost > maxCost) {
+    if (estimatedCost > maxCost && quote.base_fee > maxCost) {
       return false;
     }
     

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { config } from './config';
 import { AuditLogEntry, UsageStats } from '@agentic-router/shared';
-
 /**
  * SpendTracker manages spending limits and usage statistics
  */
@@ -10,13 +10,13 @@ export class SpendTracker {
   private usageStatsPath: string;
   
   constructor() {
-    const dataDir = path.join(__dirname, '../data');
+    const dataDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
     
-    this.auditLogPath = path.join(dataDir, 'audit.jsonl');
-    this.usageStatsPath = path.join(dataDir, 'usage-stats.json');
+    this.auditLogPath = path.resolve(dataDir, 'audit.jsonl');
+    this.usageStatsPath = path.resolve(dataDir, 'usage-stats.json');
     
     // Initialize stats file if it doesn't exist
     if (!fs.existsSync(this.usageStatsPath)) {
@@ -47,7 +47,7 @@ export class SpendTracker {
     }
     
     // Check per-request cap
-    const perRequestCap = require('./config').config.perRequestCapUsdc;
+    const perRequestCap = config.perRequestCapUsdc;
     if (amountUsdc > perRequestCap) {
       return {
         allowed: false,
@@ -56,7 +56,7 @@ export class SpendTracker {
     }
     
     // Check daily cap
-    const dailyCap = require('./config').config.dailySpendCapUsdc;
+    const dailyCap = config.dailySpendCapUsdc;
     if (spendToday + amountUsdc > dailyCap) {
       return {
         allowed: false,

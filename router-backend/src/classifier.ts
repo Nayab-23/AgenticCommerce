@@ -83,8 +83,11 @@ function isCodePrompt(text: string): boolean {
 }
 
 function isReasoningPrompt(text: string): boolean {
-  const reasoningKeywords = ['why', 'explain', 'reason', 'logic', 'analyze', 'compare', 'evaluate', 'deduce'];
-  const hasComplexStructure = text.split(' ').length > 20;
+  const reasoningKeywords = [
+    'why', 'explain', 'reason', 'logic', 'analyze', 'compare', 'evaluate', 'deduce', 'implications', 'consequences'
+  ];
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const hasComplexStructure = wordCount >= 10;
   return reasoningKeywords.some(kw => text.includes(kw)) && hasComplexStructure;
 }
 
