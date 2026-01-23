@@ -85,8 +85,10 @@ app.post('/api/route', async (req: Request, res: Response) => {
     console.log('Payment sent:', payment.tx_hash);
     
     // Step 6: Request completion
-    const providerUrl = selection.provider_id === 'gemini' 
-      ? config.providers.gemini.url 
+    const providerUrl = selection.provider_id === 'gemini'
+      ? config.providers.gemini.url
+      : selection.provider_id === 'openai'
+      ? config.providers.openai.url
       : config.providers.claude.url;
     
     const completionRequest: CompletionRequest = {
@@ -151,6 +153,8 @@ app.post('/api/route', async (req: Request, res: Response) => {
           
           const escalationUrl = escalationSelection.provider_id === 'gemini'
             ? config.providers.gemini.url
+            : escalationSelection.provider_id === 'openai'
+            ? config.providers.openai.url
             : config.providers.claude.url;
           
           const escalationRequest: CompletionRequest = {

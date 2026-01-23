@@ -4,8 +4,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "concurrently \"tsx watch src/gemini-provider.ts\" \"tsx watch src/claude-provider.ts\"",
-    "start": "concurrently \"node dist/gemini-provider.js\" \"node dist/claude-provider.js\""
+    "dev": "concurrently \"tsx watch src/gemini-provider.ts\" \"tsx watch src/claude-provider.ts\" \"tsx watch src/openai-provider.ts\"",
+    "start": "concurrently \"node dist/gemini-provider.js\" \"node dist/claude-provider.js\" \"node dist/openai-provider.js\""
   },
   "dependencies": {
     "@agentic-router/shared": "*",

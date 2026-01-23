@@ -69,19 +69,62 @@ app.post('/complete', async (req: Request, res: Response) => {
     // Generate completion (mock for demo, real API call if key provided)
     let completion: string;
     let tokensUsed: number;
-    
+
     if (config.demoMode || !config.gemini.apiKey) {
       console.log(`[${PROVIDER_ID}] Using mock LLM (demo mode)`);
       const mock = generateMockCompletion(request.prompt, MODEL_NAME, PROVIDER_ID);
       completion = mock.completion;
       tokensUsed = mock.tokens;
     } else {
-      // Real Gemini API call would go here
-      // For MVP, we'll use mock even if API key is provided
-      console.log(`[${PROVIDER_ID}] Real API integration placeholder`);
-      const mock = generateMockCompletion(request.prompt, MODEL_NAME, PROVIDER_ID);
-      completion = mock.completion;
-      tokensUsed = mock.tokens;
+      // Real Gemini API call
+      console.log(`[${PROVIDER_ID}] Making real Google Generative AI API call...`);
+      try {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${config.gemini.apiKey}`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: request.prompt
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              maxOutputTokens: 1024
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json() as any;
+
+        if (!data.candidates || data.candidates.length === 0) {
+          throw new Error('Gemini API returned no candidates');
+        }
+
+        completion = data.candidates[0].content.parts[0].text;
+
+        // Gemini API returns token counts in usageMetadata
+        const inputTokens = data.usageMetadata?.promptTokenCount || 0;
+        const outputTokens = data.usageMetadata?.candidatesTokenCount || 0;
+        tokensUsed = inputTokens + outputTokens;
+
+        console.log(`[${PROVIDER_ID}] API call successful - ${tokensUsed} tokens used`);
+      } catch (apiError) {
+        console.error(`[${PROVIDER_ID}] API call failed:`, apiError);
+        throw apiError;
+      }
     }
     
     const response: CompletionResponse = {

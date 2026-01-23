@@ -16,9 +16,9 @@ app.use(express.json());
 const paymentVerifier = new PaymentVerifier();
 
 // Provider metadata
-const PROVIDER_ID = 'claude';
-const MODEL_NAME = config.claude.model;
-const PROVIDER_ADDRESS = process.env.PROVIDER_CLAUDE_ADDRESS || '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
+const PROVIDER_ID = 'openai';
+const MODEL_NAME = config.openai.model;
+const PROVIDER_ADDRESS = process.env.PROVIDER_OPENAI_ADDRESS || '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
 
 /**
  * GET /quote - Return pricing information
@@ -27,14 +27,14 @@ app.get('/quote', (req: Request, res: Response) => {
   const quote: ProviderQuote = {
     provider_id: PROVIDER_ID,
     model_name: MODEL_NAME,
-    price_per_1k_tokens: 0.00025, // Higher quality, higher price
-    base_fee: 0.0003,
-    est_latency_ms: 1200,
-    quality_tier: 'premium',
+    price_per_1k_tokens: 0.0015, // GPT-3.5-turbo pricing
+    base_fee: 0.0001,
+    est_latency_ms: 800,
+    quality_tier: 'balanced',
     expires_at: Date.now() + 60000, // Valid for 60 seconds
     arc_address: PROVIDER_ADDRESS
   };
-  
+
   res.json(quote);
 });
 
@@ -43,11 +43,11 @@ app.get('/quote', (req: Request, res: Response) => {
  */
 app.post('/complete', async (req: Request, res: Response) => {
   const request: CompletionRequest = req.body;
-  
+
   try {
     console.log(`\n[${PROVIDER_ID}] Received completion request ${request.request_id}`);
     console.log(`Payment TX: ${request.tx_hash}`);
-    
+
     // Verify payment
     const verification = await paymentVerifier.verifyPayment(
       request.tx_hash,
@@ -55,7 +55,7 @@ app.post('/complete', async (req: Request, res: Response) => {
       PROVIDER_ADDRESS,
       request.payment_nonce
     );
-    
+
     if (!verification.verified) {
       console.log(`[${PROVIDER_ID}] Payment verification failed: ${verification.reason}`);
       return res.status(402).json({
@@ -63,66 +63,65 @@ app.post('/complete', async (req: Request, res: Response) => {
         reason: verification.reason
       });
     }
-    
+
     console.log(`[${PROVIDER_ID}] Payment verified ✓`);
-    
+
     // Generate completion (mock for demo, real API call if key provided)
     let completion: string;
     let tokensUsed: number;
 
-    if (config.demoMode || !config.claude.apiKey) {
+    if (config.demoMode || !config.openai.apiKey) {
       console.log(`[${PROVIDER_ID}] Using mock LLM (demo mode)`);
       const mock = generateMockCompletion(request.prompt, MODEL_NAME, PROVIDER_ID);
       completion = mock.completion;
       tokensUsed = mock.tokens;
     } else {
-      // Real Claude API call
-      console.log(`[${PROVIDER_ID}] Making real Anthropic API call...`);
+      // Real OpenAI API call
+      console.log(`[${PROVIDER_ID}] Making real OpenAI API call...`);
       try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': config.claude.apiKey,
-            'anthropic-version': '2023-06-01'
+            'Authorization': `Bearer ${config.openai.apiKey}`
           },
           body: JSON.stringify({
             model: MODEL_NAME,
-            max_tokens: 1024,
             messages: [
               {
                 role: 'user',
                 content: request.prompt
               }
-            ]
+            ],
+            max_tokens: 1024
           })
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(`Anthropic API error: ${response.status} - ${errorText}`);
+          throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json() as any;
-        completion = data.content[0].text;
-        tokensUsed = data.usage.input_tokens + data.usage.output_tokens;
+        completion = data.choices[0].message.content;
+        tokensUsed = data.usage.total_tokens;
         console.log(`[${PROVIDER_ID}] API call successful - ${tokensUsed} tokens used`);
       } catch (apiError) {
         console.error(`[${PROVIDER_ID}] API call failed:`, apiError);
         throw apiError;
       }
     }
-    
+
     const response: CompletionResponse = {
       completion,
       tokens_used: tokensUsed,
       model: MODEL_NAME,
       provider_id: PROVIDER_ID
     };
-    
+
     console.log(`[${PROVIDER_ID}] Completion delivered (${tokensUsed} tokens)\n`);
     res.json(response);
-    
+
   } catch (error) {
     console.error(`[${PROVIDER_ID}] Error:`, error);
     res.status(500).json({
@@ -144,9 +143,9 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Start server
-const PORT = config.claude.port;
+const PORT = config.openai.port;
 app.listen(PORT, () => {
-  console.log(`\n🔵 ${PROVIDER_ID.toUpperCase()} Provider running on http://localhost:${PORT}`);
+  console.log(`\n🟡 ${PROVIDER_ID.toUpperCase()} Provider running on http://localhost:${PORT}`);
   console.log(`Model: ${MODEL_NAME}`);
   console.log(`Address: ${PROVIDER_ADDRESS}`);
   console.log(`Demo mode: ${config.demoMode ? 'ENABLED' : 'DISABLED'}\n`);
