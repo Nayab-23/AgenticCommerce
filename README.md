@@ -32,7 +32,7 @@ An AI agent that:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         USER / FRONTEND                         │
-│                     (React + Vite UI)                          │
+│                     (Next.js UI)                               │
 └────────────────────────┬────────────────────────────────────────┘
                          │ HTTP POST /api/route
                          ▼
@@ -209,9 +209,9 @@ Simulate LLM provider services with payment verification.
 - Mock LLM responses for demo mode
 - Real API integration ready (just add keys)
 
-### 3. **Frontend** (`frontend/`)
+### 3. **Frontend** (`web/`)
 
-React + Vite UI for interacting with the system.
+Next.js UI for interacting with the system.
 
 **Panels:**
 - **Input Panel** - Submit prompts with policy constraints
@@ -647,7 +647,7 @@ Built for hackathon demo by Claude Code.
 **Technologies Used:**
 - Node.js + TypeScript
 - Express.js
-- React + Vite
+- Next.js
 - ethers.js
 - Arc Network (EVM L1)
 

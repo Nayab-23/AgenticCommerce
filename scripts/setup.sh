@@ -43,7 +43,7 @@ cd ..
 # Install frontend dependencies
 echo ""
 echo "📦 Installing frontend dependencies..."
-cd frontend
+cd web
 npm install
 cd ..
 
@@ -70,7 +70,7 @@ echo ""
 echo "Or start services individually:"
 echo "  cd router-backend && npm run dev"
 echo "  cd provider-wrappers && npm run dev"
-echo "  cd frontend && npm run dev"
+echo "  cd web && npm run dev"
 echo ""
 echo "Frontend will be available at: http://localhost:5173"
 echo "Router API at: http://localhost:3000"

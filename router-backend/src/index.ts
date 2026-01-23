@@ -15,6 +15,7 @@ import { ProviderSelector } from './selector';
 import { VerificationService } from './verifier';
 import { SpendTracker } from './spend-tracker';
 import { statsTracker } from './stats';
+import { requestStore } from './request-store';
 
 const app = express();
 app.use(cors());
@@ -26,6 +27,41 @@ const providerClient = new ProviderClient();
 const providerSelector = new ProviderSelector();
 const verificationService = new VerificationService();
 const spendTracker = new SpendTracker();
+const providerRegistry = [
+  {
+    id: 'gemini',
+    name: 'Gemini',
+    address: config.providers.gemini.address,
+    url: config.providers.gemini.url
+  },
+  {
+    id: 'claude',
+    name: 'Claude',
+    address: config.providers.claude.address,
+    url: config.providers.claude.url
+  }
+];
+
+const providerAllowlist = new Set(config.providerAllowlist);
+
+const getAllowlistStatus = (address: string) => {
+  if (providerAllowlist.size === 0) {
+    return true;
+  }
+  return providerAllowlist.has(address);
+};
+
+const applyAllowlistChange = (address: string, allowlisted: boolean) => {
+  if (providerAllowlist.size === 0) {
+    providerRegistry.forEach(provider => providerAllowlist.add(provider.address));
+  }
+  if (allowlisted) {
+    providerAllowlist.add(address);
+  } else {
+    providerAllowlist.delete(address);
+  }
+  config.providerAllowlist = Array.from(providerAllowlist);
+};
 
 /**
  * Main routing endpoint
@@ -208,7 +244,7 @@ app.post('/api/route', async (req: Request, res: Response) => {
       txHash: payment.tx_hash,
       verified: verification.passed
     });
-    
+
     // Build response
     const response: RouteResponse = {
       request_id: requestId,
@@ -224,6 +260,9 @@ app.post('/api/route', async (req: Request, res: Response) => {
       total_cost_usdc: totalCost,
       latency_ms: Date.now() - startTime
     };
+
+    // Step 12: Store request details for UI
+    requestStore.add(routeRequest, response);
     
     console.log(`Request completed in ${response.latency_ms}ms`);
     console.log('===================================\n');
@@ -237,6 +276,116 @@ app.post('/api/route', async (req: Request, res: Response) => {
       request_id: requestId
     });
   }
+});
+
+/**
+ * Get recent requests for UI
+ */
+app.get('/api/requests', (req: Request, res: Response) => {
+  const limit = Number.parseInt(req.query.limit as string, 10);
+  const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 100) : 50;
+  res.json({ requests: requestStore.list(safeLimit) });
+});
+
+/**
+ * Get request details by ID
+ */
+app.get('/api/requests/:id', (req: Request, res: Response) => {
+  const record = requestStore.get(req.params.id);
+  if (!record) {
+    return res.status(404).json({ error: 'Request not found' });
+  }
+  res.json(record);
+});
+
+/**
+ * Get audit events for UI
+ */
+app.get('/api/audit', (req: Request, res: Response) => {
+  const limit = Number.parseInt(req.query.limit as string, 10);
+  const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 300) : 200;
+  res.json({ events: requestStore.getAuditEvents(safeLimit) });
+});
+
+/**
+ * Get provider metadata and allowlist state
+ */
+app.get('/api/providers', (req: Request, res: Response) => {
+  res.json({
+    providers: providerRegistry.map(provider => ({
+      id: provider.id,
+      name: provider.name,
+      address: provider.address,
+      url: provider.url,
+      allowlisted: getAllowlistStatus(provider.address)
+    }))
+  });
+});
+
+/**
+ * Update provider allowlist status
+ */
+app.patch('/api/providers/:id/allowlist', (req: Request, res: Response) => {
+  const provider = providerRegistry.find(p => p.id === req.params.id);
+  if (!provider) {
+    return res.status(404).json({ error: 'Provider not found' });
+  }
+
+  const { allowlisted } = req.body as { allowlisted?: boolean };
+  if (typeof allowlisted !== 'boolean') {
+    return res.status(400).json({ error: 'allowlisted must be a boolean' });
+  }
+
+  applyAllowlistChange(provider.address, allowlisted);
+  res.json({ id: provider.id, allowlisted });
+});
+
+/**
+ * Get system policy settings
+ */
+app.get('/api/policy', (req: Request, res: Response) => {
+  res.json({
+    emergency_stop: config.emergencyStop,
+    per_request_cap_usdc: config.perRequestCapUsdc,
+    daily_cap_usdc: config.dailySpendCapUsdc,
+    provider_allowlist: config.providerAllowlist
+  });
+});
+
+/**
+ * Update system policy settings
+ */
+app.post('/api/policy', (req: Request, res: Response) => {
+  const { emergency_stop, per_request_cap_usdc, daily_cap_usdc } = req.body as {
+    emergency_stop?: boolean;
+    per_request_cap_usdc?: number;
+    daily_cap_usdc?: number;
+  };
+
+  if (typeof emergency_stop === 'boolean') {
+    config.emergencyStop = emergency_stop;
+  }
+
+  if (typeof per_request_cap_usdc === 'number') {
+    if (per_request_cap_usdc <= 0) {
+      return res.status(400).json({ error: 'per_request_cap_usdc must be greater than 0' });
+    }
+    config.perRequestCapUsdc = per_request_cap_usdc;
+  }
+
+  if (typeof daily_cap_usdc === 'number') {
+    if (daily_cap_usdc <= 0) {
+      return res.status(400).json({ error: 'daily_cap_usdc must be greater than 0' });
+    }
+    config.dailySpendCapUsdc = daily_cap_usdc;
+  }
+
+  res.json({
+    emergency_stop: config.emergencyStop,
+    per_request_cap_usdc: config.perRequestCapUsdc,
+    daily_cap_usdc: config.dailySpendCapUsdc,
+    provider_allowlist: config.providerAllowlist
+  });
 });
 
 /**
