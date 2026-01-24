@@ -1,6 +1,8 @@
 /**
- * Simple in-memory stats tracker for demo purposes
+ * Stats tracker that persists to audit log and loads historical data
  */
+import fs from 'fs';
+import path from 'path';
 
 export interface RequestRecord {
   id: string;
@@ -16,6 +18,48 @@ export interface RequestRecord {
 
 class StatsTracker {
   private requests: RequestRecord[] = [];
+  private auditLogPath: string;
+
+  constructor() {
+    const dataDir = path.join(__dirname, '..', 'data');
+    this.auditLogPath = path.resolve(dataDir, 'audit.jsonl');
+    this.loadFromAuditLog();
+  }
+
+  /**
+   * Load historical data from audit log on startup
+   */
+  private loadFromAuditLog() {
+    try {
+      if (fs.existsSync(this.auditLogPath)) {
+        const content = fs.readFileSync(this.auditLogPath, 'utf8');
+        const lines = content.trim().split('\n').filter(Boolean);
+
+        // Load last 100 entries
+        const recentLines = lines.slice(-100);
+
+        this.requests = recentLines.map(line => {
+          const entry = JSON.parse(line);
+          return {
+            id: entry.request_id,
+            timestamp: new Date(entry.timestamp),
+            prompt: entry.prompt_preview,
+            taskType: entry.classification,
+            provider: entry.selected_provider,
+            costUsdc: entry.cost_usdc,
+            latencyMs: 1000, // Latency not stored in audit log, use default
+            txHash: entry.payment_tx,
+            verified: entry.verification_passed
+          };
+        });
+
+        console.log(`Loaded ${this.requests.length} historical requests from audit log`);
+      }
+    } catch (error) {
+      console.error('Failed to load audit log:', error);
+      this.requests = [];
+    }
+  }
 
   addRequest(record: RequestRecord) {
     this.requests.push(record);

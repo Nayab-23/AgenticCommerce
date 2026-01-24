@@ -27,8 +27,8 @@ app.get('/quote', (req: Request, res: Response) => {
   const quote: ProviderQuote = {
     provider_id: PROVIDER_ID,
     model_name: MODEL_NAME,
-    price_per_1k_tokens: 0.002, // Adjusted to meet Circle min transfer amounts
-    base_fee: 0.03,
+    price_per_1k_tokens: 0.001, // Claude 3.5 Haiku pricing ($1/1M output tokens)
+    base_fee: 0.015, // Mid-tier base fee for fast premium model
     est_latency_ms: 1200,
     quality_tier: 'premium',
     expires_at: Date.now() + 60000, // Valid for 60 seconds

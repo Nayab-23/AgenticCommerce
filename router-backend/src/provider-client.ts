@@ -11,7 +11,7 @@ export class ProviderClient {
    */
   async fetchQuotes(): Promise<ProviderQuote[]> {
     const quotes: ProviderQuote[] = [];
-    
+
     // Fetch from Gemini provider
     try {
       const geminiQuote = await this.fetchProviderQuote(
@@ -22,7 +22,7 @@ export class ProviderClient {
     } catch (error) {
       console.warn('Failed to fetch Gemini quote:', error);
     }
-    
+
     // Fetch from Claude provider
     try {
       const claudeQuote = await this.fetchProviderQuote(
@@ -33,7 +33,18 @@ export class ProviderClient {
     } catch (error) {
       console.warn('Failed to fetch Claude quote:', error);
     }
-    
+
+    // Fetch from OpenAI provider
+    try {
+      const openaiQuote = await this.fetchProviderQuote(
+        config.providers.openai.url,
+        'openai'
+      );
+      quotes.push(openaiQuote);
+    } catch (error) {
+      console.warn('Failed to fetch OpenAI quote:', error);
+    }
+
     return quotes;
   }
   

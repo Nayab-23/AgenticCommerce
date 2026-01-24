@@ -78,26 +78,51 @@ function isMathPrompt(text: string): boolean {
 }
 
 function isCodePrompt(text: string): boolean {
-  const codeKeywords = ['function', 'class', 'code', 'program', 'implement', 'algorithm', 'debug', 'write a script'];
-  return codeKeywords.some(kw => text.includes(kw));
+  // Programming language and technology indicators
+  const techKeywords = ['typescript', 'javascript', 'python', 'java', 'react', 'tsx', 'jsx', 'html', 'css', 'sql', 'api', 'node', 'express', 'flask', 'django', 'component', 'hook', 'redux', 'vue', 'angular', 'pine script', 'pinescript'];
+
+  // Code-related terms
+  const codeKeywords = ['function', 'class', 'write code', 'write a program', 'implement', 'algorithm', 'debug', 'script', 'code snippet', 'programming'];
+
+  // Common code requests (these override generic "write")
+  const codePatterns = ['auth flow', 'authentication', 'login page', 'login form', 'signup', 'database', 'backend', 'frontend', 'full-stack', 'endpoint', 'route', 'controller', 'model', 'view', 'middleware', 'handler', 'service'];
+
+  return techKeywords.some(kw => text.includes(kw)) ||
+         codeKeywords.some(kw => text.includes(kw)) ||
+         codePatterns.some(kw => text.includes(kw));
 }
 
 function isReasoningPrompt(text: string): boolean {
   const reasoningKeywords = [
-    'why', 'explain', 'reason', 'logic', 'analyze', 'compare', 'evaluate', 'deduce', 'implications', 'consequences'
+    'why', 'reason', 'logic', 'analyze', 'compare', 'evaluate', 'deduce', 'implications', 'consequences'
   ];
   const wordCount = text.split(/\s+/).filter(Boolean).length;
   const hasComplexStructure = wordCount >= 10;
-  return reasoningKeywords.some(kw => text.includes(kw)) && hasComplexStructure;
+
+  // Exclude if it's a summarization or explanation request (those are balanced tier)
+  const isSummarization = text.includes('summarize') || text.includes('summary');
+  const isExplanation = text.includes('explain');
+
+  return reasoningKeywords.some(kw => text.includes(kw)) && hasComplexStructure && !isSummarization && !isExplanation;
 }
 
 function isWritingPrompt(text: string): boolean {
-  const writingKeywords = ['write', 'compose', 'draft', 'essay', 'article', 'story', 'blog', 'email'];
-  return writingKeywords.some(kw => text.includes(kw));
+  // Content writing indicators
+  const writingKeywords = ['essay', 'article', 'story', 'blog', 'email', 'letter', 'report', 'paragraph', 'poem', 'novel', 'chapter'];
+
+  // Generic "write" but only if not code-related
+  const hasGenericWrite = text.includes('write') || text.includes('compose') || text.includes('draft');
+
+  // Check for code-related terms that would indicate it's NOT content writing
+  const codeIndicators = ['typescript', 'javascript', 'python', 'tsx', 'jsx', 'code', 'function', 'script', 'program', 'auth', 'login', 'api', 'component', 'algorithm'];
+  const isCodeRelated = codeIndicators.some(kw => text.includes(kw));
+
+  return writingKeywords.some(kw => text.includes(kw)) ||
+         (hasGenericWrite && !isCodeRelated);
 }
 
 function isSummarizationPrompt(text: string): boolean {
-  const summaryKeywords = ['summarize', 'summary', 'tldr', 'key points', 'main ideas'];
+  const summaryKeywords = ['summarize', 'summary', 'tldr', 'key points', 'main ideas', 'explain'];
   return summaryKeywords.some(kw => text.includes(kw));
 }
 
