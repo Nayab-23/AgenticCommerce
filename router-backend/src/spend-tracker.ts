@@ -38,11 +38,10 @@ export class SpendTracker {
   canSpend(amountUsdc: number): { allowed: boolean; reason?: string } {
     const stats = this.getStats();
     const today = new Date().toISOString().split('T')[0];
-    const statsDate = new Date(stats.requests_today > 0 ? Date.now() : 0).toISOString().split('T')[0];
-    
+
     // Reset daily stats if new day
     let spendToday = stats.spend_today;
-    if (today !== statsDate) {
+    if (stats.last_reset_date !== today) {
       spendToday = 0;
     }
     
@@ -77,12 +76,12 @@ export class SpendTracker {
   ): void {
     const stats = this.getStats();
     const today = new Date().toISOString().split('T')[0];
-    const statsDate = new Date(stats.requests_today > 0 ? Date.now() : 0).toISOString().split('T')[0];
-    
+
     // Reset daily stats if new day
-    if (today !== statsDate) {
+    if (stats.last_reset_date !== today) {
       stats.requests_today = 0;
       stats.spend_today = 0;
+      stats.last_reset_date = today;
     }
     
     // Update stats
@@ -128,7 +127,8 @@ export class SpendTracker {
       average_cost_usdc: 0,
       escalation_count: 0,
       requests_today: 0,
-      spend_today: 0
+      spend_today: 0,
+      last_reset_date: new Date().toISOString().split('T')[0]
     };
   }
   

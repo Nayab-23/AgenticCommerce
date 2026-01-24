@@ -27,8 +27,8 @@ app.get('/quote', (req: Request, res: Response) => {
   const quote: ProviderQuote = {
     provider_id: PROVIDER_ID,
     model_name: MODEL_NAME,
-    price_per_1k_tokens: 0.0015, // GPT-3.5-turbo pricing
-    base_fee: 0.0001,
+    price_per_1k_tokens: 0.002, // Balanced tier pricing
+    base_fee: 0.015, // Balanced between cheap and premium
     est_latency_ms: 800,
     quality_tier: 'balanced',
     expires_at: Date.now() + 60000, // Valid for 60 seconds

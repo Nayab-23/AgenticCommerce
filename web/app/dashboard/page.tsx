@@ -36,6 +36,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import type { TooltipProps } from 'recharts'
 import {
   createRouteRequest,
   fetchDashboardStats,
@@ -63,6 +64,37 @@ import {
 } from '@/lib/formatters'
 
 const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+
+// Custom tooltip component with dark text
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        backgroundColor: 'white',
+        border: '1px solid #ccc',
+        borderRadius: '6px',
+        padding: '10px',
+        color: '#000'
+      }}>
+        {label && (
+          <p style={{
+            fontWeight: 600,
+            marginBottom: '4px',
+            color: '#000'
+          }}>
+            {label}
+          </p>
+        )}
+        {payload.map((entry, index) => (
+          <p key={index} style={{ color: '#000', margin: '2px 0' }}>
+            <span style={{ color: entry.color }}>●</span> {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(6) : entry.value}
+          </p>
+        ))}
+      </div>
+    )
+  }
+  return null
+}
 
 export default function OverviewPage() {
   const router = useRouter()
@@ -209,8 +241,9 @@ export default function OverviewPage() {
   const providerSpendData = useMemo(
     () =>
       (dashboardStats?.providerBreakdown || []).map((entry) => ({
-        ...entry,
         provider: providerDisplayName(entry.provider),
+        requests: entry.requests / 100,
+        spend: entry.spend,
       })),
     [dashboardStats],
   )
@@ -233,6 +266,32 @@ export default function OverviewPage() {
     if (!dashboardStats?.totals.totalRequests) return 0
     const failures = dashboardStats.totals.totalRequests * (1 - dashboardStats.totals.successRate / 100)
     return Math.max(0, Math.round(failures))
+  }, [dashboardStats])
+
+  const estimatedSavings = useMemo(() => {
+    if (!usageStats?.total_requests || !usageStats?.total_spend_usdc) return 0
+    // Estimate what user would have spent if they used Claude Sonnet 3 for everything
+    // Claude Sonnet 3: $0.02 base + ~1k avg tokens × $0.015/1k = $0.035 per request
+    const claudeCostPerRequest = 0.035
+    const wouldHaveSpent = usageStats.total_requests * claudeCostPerRequest
+    const actualSpent = usageStats.total_spend_usdc
+    return Math.max(0, wouldHaveSpent - actualSpent)
+  }, [usageStats])
+
+  const costOverTimeWithSavings = useMemo(() => {
+    if (!dashboardStats?.costOverTime) return []
+    const claudeCostPerRequest = 0.035 // Claude Sonnet 3: $0.02 base + ~1k tokens × $0.015
+    let cumulativeSpent = 0
+    let cumulativeWouldHaveSpent = 0
+    return dashboardStats.costOverTime.map((item) => {
+      cumulativeSpent += item.cost
+      cumulativeWouldHaveSpent += claudeCostPerRequest
+      return {
+        time: item.time,
+        actualSpent: cumulativeSpent,
+        wouldHaveSpent: cumulativeWouldHaveSpent
+      }
+    })
   }, [dashboardStats])
 
   return (
@@ -322,13 +381,21 @@ export default function OverviewPage() {
                     <span className="text-muted-foreground">Selected Provider</span>
                     <span>{providerDisplayName(routeResponse.selected_provider.provider_id)}</span>
                   </div>
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground text-xs">Selection Rationale</span>
+                    <div className="text-sm mt-1 text-primary">{routeResponse.selected_provider.rationale}</div>
+                  </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Estimated Cost</span>
+                    <span className="text-muted-foreground">Base Fee</span>
+                    <span>{formatUsdc(routeResponse.selected_provider.quote.base_fee)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Estimated Cost (base + tokens)</span>
                     <span>{formatUsdc(routeResponse.selected_provider.estimated_cost)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Total Cost</span>
-                    <span>{formatUsdc(routeResponse.total_cost_usdc)}</span>
+                    <span className="text-muted-foreground font-semibold">Actual Cost</span>
+                    <span className="font-semibold">{formatUsdc(routeResponse.total_cost_usdc)}</span>
                   </div>
                   <div className="text-muted-foreground">Completion</div>
                   <div className="bg-muted rounded-md p-3 text-xs whitespace-pre-wrap">
@@ -404,14 +471,15 @@ export default function OverviewPage() {
               tooltip="Daily spending vs daily cap"
             />
             <KpiCard
+              title="Estimated Savings"
+              value={formatUsdc(estimatedSavings)}
+              unit="USDC"
+              tooltip="Estimated savings vs using premium provider for all requests"
+            />
+            <KpiCard
               title="Active Providers"
               value={activeProviderCount}
               tooltip="Number of providers currently responding"
-            />
-            <KpiCard
-              title="Verification Failures"
-              value={verificationFailures}
-              tooltip="Total verification failures in period"
             />
           </div>
         )}
@@ -420,20 +488,30 @@ export default function OverviewPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Cost Per Request Over Time</h3>
+            <h3 className="text-lg font-semibold mb-4">Actual Spend vs Without Routing</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dashboardStats?.costOverTime || []}>
+              <LineChart data={costOverTimeWithSavings}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="time" stroke="var(--color-muted-foreground)" />
-                <YAxis stroke="var(--color-muted-foreground)" />
-                <Tooltip />
+                <XAxis dataKey="time" stroke="hsl(var(--foreground))" />
+                <YAxis stroke="hsl(var(--foreground))" />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
                 <Line
                   type="monotone"
-                  dataKey="cost"
+                  dataKey="actualSpent"
                   stroke="var(--color-primary)"
                   strokeWidth={2}
                   dot={{ fill: 'var(--color-primary)' }}
-                  name="Avg Cost (USDC)"
+                  name="Actual Spent ($)"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="wouldHaveSpent"
+                  stroke="var(--color-destructive)"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ fill: 'var(--color-destructive)' }}
+                  name="Without Routing ($)"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -444,9 +522,9 @@ export default function OverviewPage() {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={latencySeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="time" stroke="var(--color-muted-foreground)" />
-                <YAxis stroke="var(--color-muted-foreground)" />
-                <Tooltip />
+                <XAxis dataKey="time" stroke="hsl(var(--foreground))" />
+                <YAxis stroke="hsl(var(--foreground))" />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 <Line
                   type="monotone"
@@ -471,11 +549,11 @@ export default function OverviewPage() {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={providerSpendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="provider" stroke="var(--color-muted-foreground)" />
-                <YAxis stroke="var(--color-muted-foreground)" />
-                <Tooltip />
+                <XAxis dataKey="provider" stroke="hsl(var(--foreground))" />
+                <YAxis stroke="hsl(var(--foreground))" />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey="requests" fill="var(--color-chart-1)" name="Requests" />
+                <Bar dataKey="requests" fill="var(--color-chart-1)" name="Requests (÷100)" />
                 <Bar dataKey="spend" fill="var(--color-chart-2)" name="Spend ($)" />
               </BarChart>
             </ResponsiveContainer>

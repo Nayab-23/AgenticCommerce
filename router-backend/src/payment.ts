@@ -96,6 +96,12 @@ export class PaymentService {
       // Generate fresh ciphertext for this request
       const entitySecretCiphertext = await this.generateEntitySecretCiphertext();
 
+      // Circle requires amounts with proper decimal precision (minimum 0.01 USDC)
+      // Format to 6 decimal places (USDC has 6 decimals) and ensure minimum 0.01
+      const formattedAmount = Math.max(0.01, amountUsdc).toFixed(6);
+
+      console.log(`Formatted amount: ${formattedAmount} USDC`);
+
       // Initiate transfer via Circle API
       const transferResponse = await fetch('https://api.circle.com/v1/w3s/developer/transactions/transfer', {
         method: 'POST',
@@ -107,7 +113,7 @@ export class PaymentService {
           idempotencyKey: paymentNonce,
           walletId: config.circleWalletId,
           destinationAddress: recipientAddress,
-          amounts: [amountUsdc.toString()],
+          amounts: [formattedAmount],
           tokenId: config.circleTokenId,
           feeLevel: 'MEDIUM',
           entitySecretCiphertext

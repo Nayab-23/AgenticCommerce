@@ -83,7 +83,7 @@ export function RequestsTable({ data, onRowClick }: RequestsTableProps) {
             <TableHead>Task Type</TableHead>
             <TableHead>Risk</TableHead>
             <TableHead>Provider</TableHead>
-            <TableHead className="text-right">Quote / Paid</TableHead>
+            <TableHead className="text-right">Est. / Actual Cost</TableHead>
             <TableHead className="cursor-pointer" onClick={() => handleSort('latency')}>
               <div className="flex items-center justify-end gap-2">
                 Latency (ms)
@@ -126,8 +126,8 @@ export function RequestsTable({ data, onRowClick }: RequestsTableProps) {
                 <ProviderPill name={row.provider} />
               </TableCell>
               <TableCell className="text-right text-sm">
-                <div className="text-primary">{row.quoteCost}</div>
-                <div className="text-muted-foreground">{row.paidCost}</div>
+                <div className="text-muted-foreground text-xs">Est: <span className="text-foreground font-medium">{row.quoteCost}</span></div>
+                <div className="text-muted-foreground text-xs">Act: <span className="text-primary font-semibold">{row.paidCost}</span></div>
               </TableCell>
               <TableCell className="text-right text-sm">{row.latency}</TableCell>
               <TableCell>

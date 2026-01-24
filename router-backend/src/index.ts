@@ -39,6 +39,12 @@ const providerRegistry = [
     name: 'Claude',
     address: config.providers.claude.address,
     url: config.providers.claude.url
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    address: config.providers.openai.address,
+    url: config.providers.openai.url
   }
 ];
 

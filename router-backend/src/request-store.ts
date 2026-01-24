@@ -3,6 +3,8 @@ import {
   RouteRequest,
   RouteResponse,
 } from '@agentic-router/shared';
+import fs from 'fs';
+import path from 'path';
 
 export interface StoredRequest {
   id: string;
@@ -39,6 +41,95 @@ class RequestStore {
   private requests: StoredRequest[] = [];
   private requestMap = new Map<string, StoredRequest>();
   private maxEntries = 100;
+  private auditLogPath: string;
+
+  constructor() {
+    const dataDir = path.join(__dirname, '..', 'data');
+    this.auditLogPath = path.resolve(dataDir, 'audit.jsonl');
+    this.loadFromAuditLog();
+  }
+
+  /**
+   * Load historical requests from audit log on startup
+   */
+  private loadFromAuditLog() {
+    try {
+      if (fs.existsSync(this.auditLogPath)) {
+        const content = fs.readFileSync(this.auditLogPath, 'utf8');
+        const lines = content.trim().split('\n').filter(Boolean);
+
+        // Load last 100 entries to populate request store
+        const recentLines = lines.slice(-this.maxEntries);
+
+        // Process in reverse order to get newest first
+        for (let i = recentLines.length - 1; i >= 0; i--) {
+          const line = recentLines[i];
+          const entry = JSON.parse(line);
+
+          // Reconstruct a minimal StoredRequest from audit log
+          const storedRequest: StoredRequest = {
+            id: entry.request_id,
+            created_at: entry.timestamp,
+            request: {
+              prompt: entry.prompt_preview,
+              request_id: entry.request_id
+            },
+            response: {
+              request_id: entry.request_id,
+              classification: {
+                task_type: entry.classification,
+                estimated_tokens: 100, // Default estimate
+                requires_quality: this.inferQualityTier(entry.classification)
+              },
+              quotes_received: [],
+              selected_provider: {
+                provider_id: entry.selected_provider,
+                quote: {} as ProviderQuote,
+                estimated_cost: entry.cost_usdc,
+                rationale: ''
+              },
+              payment: {
+                tx_hash: entry.payment_tx,
+                amount_usdc: entry.cost_usdc,
+                recipient_address: '',
+                payment_nonce: '',
+                block_number: 0
+              },
+              completion: '',
+              verification: {
+                passed: entry.verification_passed,
+                score: 1.0,
+                reason: 'Historical entry'
+              },
+              escalated: entry.escalated || false,
+              total_cost_usdc: entry.cost_usdc,
+              latency_ms: 1000
+            }
+          };
+
+          this.requests.push(storedRequest);
+          this.requestMap.set(storedRequest.id, storedRequest);
+        }
+
+        console.log(`Loaded ${this.requests.length} historical requests into request store (newest first)`);
+      }
+    } catch (error) {
+      console.error('Failed to load audit log into request store:', error);
+      this.requests = [];
+    }
+  }
+
+  private inferQualityTier(taskType: string): string {
+    const tierMap: Record<string, string> = {
+      'trivial_math': 'cheap',
+      'short_qa': 'cheap',
+      'summarization': 'balanced',
+      'writing': 'balanced',
+      'code': 'balanced',
+      'reasoning': 'premium'
+    };
+    return tierMap[taskType] || 'balanced';
+  }
 
   add(request: RouteRequest, response: RouteResponse): void {
     const entry: StoredRequest = {

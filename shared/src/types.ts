@@ -101,6 +101,7 @@ export interface UsageStats {
   escalation_count: number;
   requests_today: number;
   spend_today: number;
+  last_reset_date?: string; // ISO date string for daily reset tracking
 }
 
 export interface AuditLogEntry {

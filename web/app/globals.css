@@ -123,3 +123,36 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Recharts tooltip styling for better readability */
+.recharts-tooltip-wrapper {
+  .recharts-default-tooltip {
+    background-color: white !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 6px !important;
+    padding: 10px !important;
+  }
+
+  .recharts-tooltip-label {
+    color: hsl(var(--foreground)) !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .recharts-tooltip-item {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .recharts-tooltip-item-name,
+  .recharts-tooltip-item-separator,
+  .recharts-tooltip-item-value {
+    color: hsl(var(--foreground)) !important;
+  }
+}
+
+/* Dark mode tooltip styling */
+.dark .recharts-tooltip-wrapper {
+  .recharts-default-tooltip {
+    background-color: hsl(var(--popover)) !important;
+  }
+}
