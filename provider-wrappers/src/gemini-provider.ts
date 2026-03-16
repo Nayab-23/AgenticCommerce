@@ -4,7 +4,7 @@ import {
   ProviderQuote,
   CompletionRequest,
   CompletionResponse
-} from '@agentic-router/shared';
+} from '@agentic-commerce/shared';
 import { config } from './config';
 import { PaymentVerifier } from './payment-verifier';
 import { generateMockCompletion } from './mock-llm';
@@ -66,12 +66,12 @@ app.post('/complete', async (req: Request, res: Response) => {
     
     console.log(`[${PROVIDER_ID}] Payment verified ✓`);
     
-    // Generate completion (mock for demo, real API call if key provided)
+    // Generate completion with a mock response in sandbox mode if no API key is configured.
     let completion: string;
     let tokensUsed: number;
 
     if (config.demoMode || !config.gemini.apiKey) {
-      console.log(`[${PROVIDER_ID}] Using mock LLM (demo mode)`);
+      console.log(`[${PROVIDER_ID}] Using mock LLM (sandbox mode)`);
       const mock = generateMockCompletion(request.prompt, MODEL_NAME, PROVIDER_ID);
       completion = mock.completion;
       tokensUsed = mock.tokens;
@@ -163,5 +163,5 @@ app.listen(PORT, () => {
   console.log(`\n🟢 ${PROVIDER_ID.toUpperCase()} Provider running on http://localhost:${PORT}`);
   console.log(`Model: ${MODEL_NAME}`);
   console.log(`Address: ${PROVIDER_ADDRESS}`);
-  console.log(`Demo mode: ${config.demoMode ? 'ENABLED' : 'DISABLED'}\n`);
+  console.log(`Sandbox mode: ${config.demoMode ? 'ENABLED' : 'DISABLED'}\n`);
 });

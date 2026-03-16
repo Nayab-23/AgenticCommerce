@@ -4,7 +4,7 @@ import {
   ClassificationResult,
   ProviderSelection,
   QualityTier
-} from '@agentic-router/shared';
+} from '@agentic-commerce/shared';
 import { config } from './config';
 
 /**
@@ -35,9 +35,8 @@ export class ProviderSelector {
     // Sort by cost (ascending)
     scoredCandidates.sort((a, b) => a.estimatedCost - b.estimatedCost);
 
-    // Use classification's quality requirement as the primary criterion
-    // Policy preference is only used if classification doesn't specify
-    const qualityPreference = classification.requires_quality || policy?.quality_preference || 'balanced';
+    // Let explicit caller policy override the classifier's default tier.
+    const qualityPreference = policy?.quality_preference || classification.requires_quality || 'balanced';
     const selected = this.selectByQuality(scoredCandidates, qualityPreference, classification);
 
     if (!selected) {

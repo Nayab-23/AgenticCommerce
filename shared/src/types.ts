@@ -1,4 +1,4 @@
-// Shared types for Agentic LLM Router
+// Shared types for the Agentic Commerce workspace
 
 export type TaskType = 
   | 'trivial_math'

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card } from '@/components/ui/card'
@@ -20,7 +20,7 @@ import {
   taskTypeLabel,
 } from '@/lib/formatters'
 
-export default function RequestDetailsPage() {
+function RequestDetailsContent() {
   const searchParams = useSearchParams()
   const requestId = searchParams.get('requestId') || ''
   const [request, setRequest] = useState<RequestDetail | null>(null)
@@ -384,5 +384,21 @@ export default function RequestDetailsPage() {
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function RequestDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardLayout>
+          <div className="p-6">
+            <p className="text-sm text-muted-foreground">Loading request details...</p>
+          </div>
+        </DashboardLayout>
+      }
+    >
+      <RequestDetailsContent />
+    </Suspense>
   )
 }

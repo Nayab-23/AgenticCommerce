@@ -17,6 +17,7 @@ import { TaskBadge } from './task-badge'
 import { RiskBadge } from './risk-badge'
 import { ProviderPill } from './provider-pill'
 import { VerificationBadge } from './verification-badge'
+import { explorerTxUrl } from '@/lib/formatters'
 
 interface RequestRow {
   id: string
@@ -152,7 +153,7 @@ export function RequestsTable({ data, onRowClick }: RequestsTableProps) {
                     <Copy className="h-3 w-3" />
                   </Button>
                   <a
-                    href={`https://etherscan.io/tx/${row.txHash}`}
+                    href={explorerTxUrl(row.txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

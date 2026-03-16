@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Copy, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
+import { explorerTxUrl } from '@/lib/formatters'
 
 interface ReceiptCardProps {
   chain: string
@@ -66,12 +67,12 @@ export function ReceiptCard({ chain, amount, recipient, txHash, status }: Receip
           </div>
         </div>
         <a
-          href={`https://etherscan.io/tx/${txHash}`}
+          href={explorerTxUrl(txHash)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-primary hover:underline flex items-center gap-1 pt-2"
         >
-          View on Etherscan <ExternalLink className="h-3 w-3" />
+          View on Arc Explorer <ExternalLink className="h-3 w-3" />
         </a>
       </div>
     </Card>

@@ -5,7 +5,7 @@
 
 echo "💰 Treasury Funding Instructions"
 echo ""
-echo "To fund the treasury wallet for demo/testing:"
+echo "To fund the treasury wallet for sandbox/testing:"
 echo ""
 echo "1. Get your treasury address from the router backend logs or .env file"
 echo "   Default test address: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Setup script for Agentic LLM Router
+# Setup script for Agentic Commerce
 
-echo "🚀 Setting up Agentic LLM Router..."
+echo "🚀 Setting up Agentic Commerce..."
 echo ""
 
 # Check Node.js
@@ -76,4 +76,5 @@ echo "Frontend will be available at: http://localhost:5173"
 echo "Router API at: http://localhost:3000"
 echo "Gemini Provider at: http://localhost:4001"
 echo "Claude Provider at: http://localhost:4002"
+echo "OpenAI Provider at: http://localhost:4003"
 echo ""

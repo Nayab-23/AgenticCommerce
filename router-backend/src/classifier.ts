@@ -1,8 +1,8 @@
-import { TaskType, QualityTier, ClassificationResult } from '@agentic-router/shared';
+import { TaskType, QualityTier, ClassificationResult } from '@agentic-commerce/shared';
 
 /**
  * Classifies a prompt into task type and derives quality requirements.
- * Uses keyword matching and heuristics for MVP.
+ * Uses keyword matching and heuristics as a lightweight baseline classifier.
  */
 export function classifyPrompt(prompt: string): ClassificationResult {
   const lower = prompt.toLowerCase();
@@ -99,11 +99,10 @@ function isReasoningPrompt(text: string): boolean {
   const wordCount = text.split(/\s+/).filter(Boolean).length;
   const hasComplexStructure = wordCount >= 10;
 
-  // Exclude if it's a summarization or explanation request (those are balanced tier)
+  // Exclude summarization prompts, but allow explanation-style reasoning requests.
   const isSummarization = text.includes('summarize') || text.includes('summary');
-  const isExplanation = text.includes('explain');
 
-  return reasoningKeywords.some(kw => text.includes(kw)) && hasComplexStructure && !isSummarization && !isExplanation;
+  return reasoningKeywords.some(kw => text.includes(kw)) && hasComplexStructure && !isSummarization;
 }
 
 function isWritingPrompt(text: string): boolean {
@@ -122,7 +121,7 @@ function isWritingPrompt(text: string): boolean {
 }
 
 function isSummarizationPrompt(text: string): boolean {
-  const summaryKeywords = ['summarize', 'summary', 'tldr', 'key points', 'main ideas', 'explain'];
+  const summaryKeywords = ['summarize', 'summary', 'tldr', 'key points', 'main ideas'];
   return summaryKeywords.some(kw => text.includes(kw));
 }
 

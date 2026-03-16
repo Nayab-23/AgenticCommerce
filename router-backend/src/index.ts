@@ -6,7 +6,7 @@ import {
   RouteResponse,
   CompletionRequest,
   PolicyConstraints
-} from '@agentic-router/shared';
+} from '@agentic-commerce/shared';
 import { config } from './config';
 import { classifyPrompt } from './classifier';
 import { PaymentService } from './payment';
@@ -450,7 +450,7 @@ app.get('/health', (req: Request, res: Response) => {
 const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`\n🚀 Router Backend running on http://localhost:${PORT}`);
-  console.log(`Demo mode: ${config.demoMode ? 'ENABLED' : 'DISABLED'}`);
+  console.log(`Sandbox mode: ${config.demoMode ? 'ENABLED' : 'DISABLED'}`);
   console.log(`Emergency stop: ${config.emergencyStop ? 'ACTIVE' : 'INACTIVE'}`);
   console.log(`Treasury address: ${paymentService.getTreasuryAddress()}\n`);
 });

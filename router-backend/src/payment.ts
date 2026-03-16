@@ -1,9 +1,47 @@
 import { config } from './config';
-import { PaymentDetails } from '@agentic-router/shared';
+import { PaymentDetails } from '@agentic-commerce/shared';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+
+interface CirclePublicKeyResponse {
+  data?: {
+    publicKey?: string;
+  };
+}
+
+interface CircleTransferResponse {
+  code?: string;
+  error?: string;
+  message?: string;
+  errors?: unknown;
+  data?: {
+    id?: string;
+  };
+}
+
+interface CircleTransactionResponse {
+  data?: {
+    transaction?: {
+      state?: string;
+      txHash?: string;
+      blockHeight?: number;
+      errorReason?: string;
+    };
+  };
+}
+
+interface CircleBalancesResponse {
+  data?: {
+    tokenBalances?: Array<{
+      token: {
+        id: string;
+      };
+      amount: string;
+    }>;
+  };
+}
 
 /**
  * PaymentService handles USDC transfers via Circle Programmable Wallets on Arc
@@ -36,8 +74,12 @@ export class PaymentService {
           'Accept': 'application/json'
         }
       });
-      const data = await response.json();
-      this.publicKeyPem = data.data.publicKey;
+      const data = await response.json() as CirclePublicKeyResponse;
+      const publicKey = data.data?.publicKey;
+      if (!publicKey) {
+        throw new Error('Circle public key response did not include a public key');
+      }
+      this.publicKeyPem = publicKey;
     }
 
     // Convert hex entity secret to raw bytes
@@ -74,7 +116,7 @@ export class PaymentService {
         Math.floor(Math.random() * 16).toString(16)
       ).join('');
 
-      console.log(`[DEMO MODE] Simulated payment tx: ${mockTxHash}`);
+      console.log(`[SANDBOX MODE] Simulated payment tx: ${mockTxHash}`);
 
       return {
         amount_usdc: amountUsdc,
@@ -120,13 +162,16 @@ export class PaymentService {
         })
       });
 
-      const transferData = await transferResponse.json();
+      const transferData = await transferResponse.json() as CircleTransferResponse;
 
       if (transferData.code || transferData.error) {
         throw new Error(`Circle transfer failed: ${transferData.message || JSON.stringify(transferData.errors)}`);
       }
 
-      const transactionId = transferData.data.id;
+      const transactionId = transferData.data?.id;
+      if (!transactionId) {
+        throw new Error('Circle transfer response did not include a transaction id');
+      }
       console.log(`Transfer initiated: ${transactionId}`);
 
       // Poll for transaction completion
@@ -159,10 +204,13 @@ export class PaymentService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as CircleTransactionResponse;
       const tx = data.data?.transaction;
 
       if (tx?.state === 'COMPLETE') {
+        if (!tx.txHash || tx.blockHeight === undefined) {
+          throw new Error('Transaction completed without hash or block height');
+        }
         return {
           txHash: tx.txHash,
           blockHeight: tx.blockHeight
@@ -196,9 +244,9 @@ export class PaymentService {
         }
       });
 
-      const data = await response.json();
+      const data = await response.json() as CircleBalancesResponse;
       const usdcBalance = data.data?.tokenBalances?.find(
-        (b: any) => b.token.id === config.circleTokenId
+        (balance) => balance.token.id === config.circleTokenId
       );
 
       return usdcBalance ? parseFloat(usdcBalance.amount) : 0;

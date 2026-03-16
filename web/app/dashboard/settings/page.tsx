@@ -12,14 +12,14 @@ const apiKeys = [
     id: 'key_abc123',
     name: 'Production API Key',
     key: 'sk_live_REPLACE_WITH_REAL_KEY',
-    created: '2024-01-15',
+    created: '2026-02-14',
     lastUsed: '2 hours ago',
   },
   {
     id: 'key_def456',
     name: 'Development API Key',
     key: 'sk_test_REPLACE_WITH_REAL_KEY',
-    created: '2024-01-10',
+    created: '2026-03-03',
     lastUsed: '30 min ago',
   },
 ]
@@ -27,7 +27,7 @@ const apiKeys = [
 const webhooks = [
   {
     id: 'webhook_1',
-    url: 'https://api.example.com/webhooks/streamline',
+    url: 'https://api.example.com/webhooks/agentic-commerce',
     events: ['payment_sent', 'verification_failed', 'escalated'],
     active: true,
   },
@@ -42,22 +42,22 @@ const webhooks = [
 const teamMembers = [
   {
     id: 'user_1',
-    name: 'John Doe',
-    email: 'john@example.com',
+    name: 'Ops Owner',
+    email: 'ops@example.com',
     role: 'Owner',
     status: 'active',
   },
   {
     id: 'user_2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
+    name: 'Platform Admin',
+    email: 'admin@example.com',
     role: 'Admin',
     status: 'active',
   },
   {
     id: 'user_3',
-    name: 'Bob Johnson',
-    email: 'bob@example.com',
+    name: 'Audit Viewer',
+    email: 'audit@example.com',
     role: 'Viewer',
     status: 'inactive',
   },

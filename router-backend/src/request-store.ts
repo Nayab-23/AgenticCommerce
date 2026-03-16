@@ -1,8 +1,9 @@
 import {
   ProviderQuote,
+  QualityTier,
   RouteRequest,
   RouteResponse,
-} from '@agentic-router/shared';
+} from '@agentic-commerce/shared';
 import fs from 'fs';
 import path from 'path';
 
@@ -119,8 +120,8 @@ class RequestStore {
     }
   }
 
-  private inferQualityTier(taskType: string): string {
-    const tierMap: Record<string, string> = {
+  private inferQualityTier(taskType: string): QualityTier {
+    const tierMap: Record<string, QualityTier> = {
       'trivial_math': 'cheap',
       'short_qa': 'cheap',
       'summarization': 'balanced',

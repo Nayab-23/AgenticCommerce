@@ -34,7 +34,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {open && <h1 className="text-lg font-semibold text-sidebar-foreground">StreamLine</h1>}
+        {open && <h1 className="text-lg font-semibold text-sidebar-foreground">Agentic Commerce</h1>}
         <Button
           variant="ghost"
           size="icon"
@@ -71,7 +71,7 @@ export function Sidebar({ open, onToggle }: SidebarProps) {
 
       {/* Footer */}
       <div className="border-t border-sidebar-border p-3 text-xs text-sidebar-foreground/70">
-        {open && <p>© 2024 StreamLine</p>}
+        {open && <p>© 2026 Agentic Commerce</p>}
       </div>
     </aside>
   )

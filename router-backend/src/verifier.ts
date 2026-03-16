@@ -1,4 +1,4 @@
-import { VerificationResult, TaskType } from '@agentic-router/shared';
+import { VerificationResult, TaskType } from '@agentic-commerce/shared';
 
 /**
  * Verifies completions to determine if escalation is needed
@@ -103,7 +103,7 @@ export class VerificationService {
   }
   
   /**
-   * Generic verification - lenient for MVP
+   * Generic verification tuned for baseline local routing experiments.
    */
   private verifyGeneric(completion: string): VerificationResult {
     const minLength = completion.length > 20;

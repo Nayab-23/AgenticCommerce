@@ -10,8 +10,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'Agentic Commerce Dashboard',
-  description: 'Premium autonomous LLM router and payment-backed procurement agent',
-  generator: 'v0.app',
+  description: 'Policy-aware routing, spend controls, and USDC-backed receipts for agentic workloads.',
   icons: {
     icon: [
       {

@@ -1,5 +1,5 @@
 /**
- * Mock LLM responses for demo mode
+ * Mock LLM responses for sandbox mode
  */
 export function generateMockCompletion(
   prompt: string,

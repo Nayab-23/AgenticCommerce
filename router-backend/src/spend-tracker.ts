@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from './config';
-import { AuditLogEntry, UsageStats } from '@agentic-router/shared';
+import { AuditLogEntry, UsageStats } from '@agentic-commerce/shared';
 /**
  * SpendTracker manages spending limits and usage statistics
  */

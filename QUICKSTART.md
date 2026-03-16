@@ -1,184 +1,80 @@
-# 🚀 Quick Start Guide
+# Quickstart
 
-## 5-Minute Demo Setup
+## Prerequisites
 
-### Step 1: Install Dependencies
+- Node.js 20.11 or newer
+- npm 11 or newer
+- Optional: Circle credentials and Arc testnet access if you want real transfers
+
+## Bootstrap The Workspace
 
 ```bash
-# From project root
-npm install
-
-# Install workspace dependencies
-cd shared && npm install && npm run build && cd ..
-cd router-backend && npm install && cd ..
-cd provider-wrappers && npm install && cd ..
-cd web && npm install && cd ..
+npm run bootstrap
+cp router-backend/.env.example router-backend/.env
+cp provider-wrappers/.env.example provider-wrappers/.env
 ```
 
-### Step 2: Start Services
+Keep `DEMO_MODE=true` in both env files for a local sandbox run.
 
-Open **3 separate terminals**:
+## Start The Stack
 
-**Terminal 1 - Router Backend:**
 ```bash
-cd router-backend
 npm run dev
 ```
-Wait for: `🚀 Router Backend running on http://localhost:3000`
 
-**Terminal 2 - Provider Wrappers:**
+Services started by the root dev command:
+
+- `router-backend` on `http://localhost:3000`
+- `provider-wrappers` on `http://localhost:4001`, `:4002`, and `:4003`
+- `web` on `http://localhost:5173`
+
+## Validate The Basics
+
+1. Open `http://localhost:5173/dashboard`.
+2. Submit a prompt from the overview page.
+3. Confirm a provider is selected and a receipt card is rendered.
+4. Open the Billing, Requests, and Providers screens to verify data is flowing.
+
+## Individual Workspace Commands
+
 ```bash
-cd provider-wrappers
-npm run dev
+npm run dev --workspace=router-backend
+npm run dev --workspace=provider-wrappers
+npm run dev --workspace=web
 ```
-Wait for: 
-- `🟢 GEMINI Provider running on http://localhost:4001`
-- `🔵 CLAUDE Provider running on http://localhost:4002`
 
-**Terminal 3 - Frontend:**
+## Verification Commands
+
 ```bash
-cd web
-npm run dev
-```
-Wait for: `Local: http://localhost:5173/`
-
-### Step 3: Open the UI
-
-Open your browser to: **http://localhost:5173**
-
-### Step 4: Try Example Prompts
-
-**Example 1: Simple Math (Cheap Provider)**
-```
-Prompt: What is 2 + 2?
-Max Cost: $0.02
-Quality: Balanced
-```
-Expected: Routes to Gemini (cheap), ~$0.0001
-
-**Example 2: Code Request (Balanced)**
-```
-Prompt: Write a function to reverse a string in JavaScript
-Max Cost: $0.02
-Quality: Balanced
-```
-Expected: Routes to Claude or Gemini depending on optimization
-
-**Example 3: Complex Reasoning (Premium)**
-```
-Prompt: Explain quantum entanglement and its implications for computing
-Max Cost: $0.02
-Quality: Premium
-```
-Expected: Routes to Claude (premium), higher cost
-
-### Step 5: View Results
-
-The UI will show:
-- ✅ Classification (task type, tokens, quality)
-- ✅ Provider quotes received
-- ✅ Selected provider + rationale
-- ✅ Payment details with TX hash
-- ✅ Completion result
-- ✅ Verification outcome
-- ✅ Usage statistics
-
----
-
-## Understanding the Output
-
-### Payment Details
-```
-Amount: $0.000125 USDC
-Recipient: 0x742d...bEb5
-TX Hash: 0xabc123... (clickable - opens Arc explorer)
-Block: #12345
+npm run build
+npm test
 ```
 
-In **DEMO_MODE** (default), the TX hash is simulated. Set `DEMO_MODE=false` for real blockchain transactions.
+## Common Configuration
 
-### Provider Quotes
-```
-gemini - cheap tier
-- gemini-1.5-flash
-- $0.00001/1K tokens
-- ~800ms latency
+Router backend:
 
-claude - premium tier
-- claude-3-haiku-20240307
-- $0.00025/1K tokens
-- ~1200ms latency
-```
+- `ARC_RPC_URL`
+- `ARC_EXPLORER_BASE`
+- `CIRCLE_API_KEY`
+- `CIRCLE_ENTITY_SECRET_RAW`
+- `CIRCLE_WALLET_ID`
+- `PROVIDER_ALLOWLIST`
 
-### Decision Rationale
-```
-"Selected gemini (gemini-1.5-flash): 
-Quality tier cheap matches cheap preference. 
-Estimated cost $0.0001 USDC, latency ~800ms."
-```
+Provider wrappers:
 
----
+- `GEMINI_API_KEY`
+- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `ALLOW_UNVERIFIED_PAYMENTS`
+
+Dashboard:
+
+- `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_EXPLORER_BASE_URL`
 
 ## Troubleshooting
 
-**"Cannot connect to router"**
-- Ensure router-backend is running on port 3000
-- Check for errors in router-backend terminal
-
-**"No providers available"**
-- Ensure provider-wrappers are running
-- Check ports 4001 and 4002 are not in use
-
-**"Payment verification failed"**
-- Ensure `DEMO_MODE=true` in both .env files
-- Restart provider-wrappers
-
-**Port conflicts**
-- Change ports in .env files if 3000, 4001, 4002, or 5173 are in use
-
----
-
-## Next Steps
-
-### Enable Real Blockchain Transactions
-
-1. Get Arc testnet access and USDC
-2. Set `DEMO_MODE=false` in all .env files
-3. Update `ARC_RPC_URL` and `ARC_USDC_ADDRESS`
-4. Fund treasury wallet (see `scripts/fund-treasury.sh`)
-
-### Add Real LLM APIs
-
-1. Get API keys:
-   - Gemini: https://ai.google.dev/
-   - Anthropic: https://www.anthropic.com/api
-
-2. Add to `provider-wrappers/.env`:
-   ```
-   GEMINI_API_KEY=your_key_here
-   ANTHROPIC_API_KEY=your_key_here
-   ```
-
-3. Providers will use real APIs instead of mocks
-
-### Explore the Code
-
-- **Classification logic**: `router-backend/src/classifier.ts`
-- **Provider selection**: `router-backend/src/selector.ts`
-- **Payment handling**: `router-backend/src/payment.ts`
-- **Verification**: `router-backend/src/verifier.ts`
-
----
-
-## Demo Tips for Judges
-
-1. **Show the flow**: Submit → Classify → Quote → Select → Pay → Complete → Verify
-2. **Highlight TX hash**: Click to "view on explorer" (placeholder in demo mode)
-3. **Demonstrate optimization**: Show cost difference between providers
-4. **Show escalation**: Use a prompt that might fail verification
-5. **Show guardrails**: Try exceeding daily cap or per-request limit
-6. **Show stats**: Refresh stats panel to see totals
-
----
-
-**Ready to demo! 🎉**
+- If the dashboard loads but has no provider data, confirm ports `4001` to `4003` are free and wrapper services started cleanly.
+- If request submission fails, confirm the router backend is reachable on port `3000`.
+- If you switch out of sandbox mode, make sure Circle and Arc credentials are valid before retrying.

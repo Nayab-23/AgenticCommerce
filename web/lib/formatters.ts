@@ -34,7 +34,11 @@ const taskTypeLabels: Record<string, string> = {
 const providerNames: Record<string, string> = {
   gemini: 'Gemini',
   claude: 'Claude',
+  openai: 'OpenAI',
 }
+
+const EXPLORER_BASE_URL =
+  process.env.NEXT_PUBLIC_EXPLORER_BASE_URL || 'https://testnet.arcscan.app'
 
 export const formatUsdc = (value: number, digits = 4) => {
   if (!Number.isFinite(value)) {
@@ -119,3 +123,6 @@ export const buildLatencySeries = (samples: Array<{ time: string; latency: numbe
 
 export const estimateCost = (quote: ProviderQuote, estimatedTokens: number) =>
   quote.base_fee + (estimatedTokens / 1000) * quote.price_per_1k_tokens
+
+export const explorerTxUrl = (txHash: string) =>
+  new URL(`/tx/${txHash}`, EXPLORER_BASE_URL).toString()

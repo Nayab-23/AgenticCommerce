@@ -79,7 +79,7 @@ async function main() {
   } catch (error) {
     console.error('Encryption failed. Using alternative method...');
 
-    // Alternative: Use simpler approach for demo
+    // Alternative: use a simpler path during local testing
     // In production, you'd want proper RSA-OAEP encryption
     console.log();
     console.log('⚠️  Manual encryption required. Use the Circle Console\'s built-in');

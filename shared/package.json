@@ -1,6 +1,6 @@
 {
-  "name": "@agentic-router/shared",
-  "version": "1.0.0",
+  "name": "@agentic-commerce/shared",
+  "version": "0.2.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {

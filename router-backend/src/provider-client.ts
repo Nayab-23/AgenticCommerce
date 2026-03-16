@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ProviderQuote, CompletionRequest, CompletionResponse } from '@agentic-router/shared';
+import { ProviderQuote, CompletionRequest, CompletionResponse } from '@agentic-commerce/shared';
 import { config } from './config';
 
 /**

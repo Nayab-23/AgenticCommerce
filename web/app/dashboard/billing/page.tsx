@@ -31,7 +31,7 @@ import {
   type TreasuryInfo,
   type UsageStats,
 } from '@/lib/api'
-import { formatTimestamp, formatUsdc, providerDisplayName } from '@/lib/formatters'
+import { explorerTxUrl, formatTimestamp, formatUsdc, providerDisplayName } from '@/lib/formatters'
 
 export default function BillingPage() {
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null)
@@ -188,7 +188,7 @@ export default function BillingPage() {
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-sm">{receipt.txHash.slice(0, 12)}...</span>
                         <a
-                          href={`https://etherscan.io/tx/${receipt.txHash}`}
+                          href={explorerTxUrl(receipt.txHash)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:text-primary/80"

@@ -41,9 +41,9 @@ export class PaymentVerifier {
       };
     }
     
-    // In demo mode, skip blockchain verification
+    // In sandbox mode, skip onchain verification.
     if (config.demoMode) {
-      console.log(`[DEMO MODE] Simulating payment verification for tx: ${txHash}`);
+      console.log(`[SANDBOX MODE] Simulating payment verification for tx: ${txHash}`);
       this.verifiedNonces.add(paymentNonce);
       return { verified: true };
     }

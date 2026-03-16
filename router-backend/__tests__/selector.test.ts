@@ -1,5 +1,5 @@
 import { ProviderSelector } from '../src/selector';
-import { ProviderQuote, ClassificationResult } from '@agentic-router/shared';
+import { ProviderQuote, ClassificationResult } from '@agentic-commerce/shared';
 
 describe('ProviderSelector', () => {
   let selector: ProviderSelector;

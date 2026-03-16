@@ -1,8 +1,12 @@
 {
-  "name": "agentic-llm-router",
-  "version": "1.0.0",
-  "description": "Autonomous LLM Procurement & Payment Router with USDC on Arc",
+  "name": "agentic-commerce-platform",
+  "version": "0.2.0",
+  "description": "Policy-aware LLM routing and payment orchestration with onchain USDC receipts.",
   "private": true,
+  "packageManager": "npm@11.5.1",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "workspaces": [
     "router-backend",
     "provider-wrappers",
@@ -10,10 +14,13 @@
     "shared"
   ],
   "scripts": {
+    "bootstrap": "npm install && npm install --workspace=router-backend && npm install --workspace=provider-wrappers && npm install --workspace=web && npm install --workspace=shared",
     "install:all": "npm install && npm install --workspace=router-backend && npm install --workspace=provider-wrappers && npm install --workspace=web && npm install --workspace=shared",
+    "build": "npm run build --workspace=shared && npm run build --workspace=router-backend && npm run build --workspace=provider-wrappers && npm run build --workspace=web",
     "build:all": "npm run build --workspace=shared && npm run build --workspace=router-backend && npm run build --workspace=provider-wrappers && npm run build --workspace=web",
     "dev": "concurrently \"npm run dev --workspace=router-backend\" \"npm run dev --workspace=provider-wrappers\" \"npm run dev --workspace=web\"",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm run build --workspace=shared && npm test --workspaces --if-present",
+    "verify": "npm run build && npm test"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
