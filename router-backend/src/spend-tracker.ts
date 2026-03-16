@@ -115,6 +115,10 @@ export class SpendTracker {
       return this.getDefaultStats();
     }
   }
+
+  replaceStats(stats: UsageStats): void {
+    this.saveStats(stats);
+  }
   
   /**
    * Get default stats

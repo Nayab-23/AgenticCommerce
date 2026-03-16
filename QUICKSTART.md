@@ -15,6 +15,7 @@ cp provider-wrappers/.env.example provider-wrappers/.env
 ```
 
 Keep `DEMO_MODE=true` in both env files for a local sandbox run.
+Keep `SHOWCASE_DATA=true` in `router-backend/.env` if you want the dashboard preloaded with curated traffic for screenshots and walkthroughs.
 
 ## Start The Stack
 

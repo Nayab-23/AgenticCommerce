@@ -151,6 +151,11 @@ class RequestStore {
     }
   }
 
+  replaceAll(requests: StoredRequest[]): void {
+    this.requests = [...requests];
+    this.requestMap = new Map(requests.map((entry) => [entry.id, entry]));
+  }
+
   list(limit = 50): RequestSummary[] {
     return this.requests.slice(0, limit).map((entry) => this.toSummary(entry));
   }

@@ -16,6 +16,11 @@ import { VerificationService } from './verifier';
 import { SpendTracker } from './spend-tracker';
 import { statsTracker } from './stats';
 import { requestStore } from './request-store';
+import {
+  buildShowcaseRequestRecords,
+  buildShowcaseStoredRequests,
+  buildShowcaseUsageStats,
+} from './showcase-data';
 
 const app = express();
 app.use(cors());
@@ -49,6 +54,14 @@ const providerRegistry = [
 ];
 
 const providerAllowlist = new Set(config.providerAllowlist);
+
+if (config.demoMode && config.showcaseData) {
+  const showcaseRequests = buildShowcaseStoredRequests();
+  requestStore.replaceAll(showcaseRequests);
+  statsTracker.replaceAll(buildShowcaseRequestRecords(showcaseRequests));
+  spendTracker.replaceStats(buildShowcaseUsageStats(showcaseRequests));
+  console.log(`Loaded ${showcaseRequests.length} showcase requests for sandbox mode`);
+}
 
 const getAllowlistStatus = (address: string) => {
   if (providerAllowlist.size === 0) {

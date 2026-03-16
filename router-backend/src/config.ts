@@ -41,6 +41,7 @@ export const config = {
   // System
   port: parseInt(process.env.PORT || '3000'),
   demoMode: process.env.DEMO_MODE === 'true',
+  showcaseData: process.env.SHOWCASE_DATA !== 'false',
   emergencyStop: process.env.EMERGENCY_STOP === 'true',
   
   // Allowlist

@@ -69,6 +69,10 @@ class StatsTracker {
     }
   }
 
+  replaceAll(records: RequestRecord[]) {
+    this.requests = [...records];
+  }
+
   getRecentRequests(limit = 10): RequestRecord[] {
     return this.requests.slice(-limit).reverse();
   }
